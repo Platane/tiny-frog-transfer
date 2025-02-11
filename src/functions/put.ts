@@ -1,4 +1,5 @@
 import type { R2Bucket, PagesFunction } from "@cloudflare/workers-types";
+// import crypto from "crypto";
 
 export const onRequestPut: PagesFunction<{
   bucket: R2Bucket;
@@ -12,7 +13,11 @@ export const onRequestPut: PagesFunction<{
   if (value.byteLength > 1000 * 1000)
     return new Response("content too large", { status: 413 });
 
-  const key = Math.random().toString(36).slice(2, 8);
+  // const hash = crypto.createHash("md5").update(value).digest("base64");
+
+  // const key = hash.slice(4).replaceAll("/", "").toLowerCase();
+
+  const key = Math.random().toString(36).slice(2, 6);
 
   await env.bucket.put(key, value);
 

@@ -7,7 +7,7 @@ export const onRequestGet: PagesFunction<
   },
   "key"
 > = async ({ request, env, params }) => {
-  const key = (params.key as string).split(".")[0];
+  const key = (params.key as string).split(".")[0].toLowerCase();
 
   const value = await env.bucket.get(key);
 
