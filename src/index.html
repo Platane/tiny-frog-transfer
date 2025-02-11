@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <style>
+      * {
+        font-family: system-ui, helvetica, Arial;
+      }
+      input,
+      button {
+        padding: 10px;
+      }
+      body {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      #paper {
+        display: flex;
+        flex-direction: column;
+        width: calc(100% - 40px);
+        max-width: 400px;
+        margin: 20px 0;
+      }
+      #form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      section {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .spinner {
+        animation: spinning 500ms linear infinite;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .spinner::after {
+        content: "⌛️";
+      }
+      @keyframes spinning {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+
+    <title>🐸 Tiny Frog Transfer</title>
+  </head>
+
+  <body>
+    <div id="paper">
+      <h1>🐸 Share stuff</h1>
+
+      <form id="form">
+        <section>
+          <label for="file">file to share</label>
+          <input id="file" name="file" type="file" required />
+        </section>
+
+        <section>
+          <label for="api-key">password</label>
+          <input
+            id="api-key"
+            name="api-key"
+            type="password"
+            placeholder="xxx"
+            autocomplete="current-password"
+            required
+          />
+        </section>
+
+        <section>
+          <button type="submit">submit</button>
+        </section>
+      </form>
+    </div>
+
+    <script type="module">
+      const form = document.getElementById("form");
+      const paper = document.getElementById("paper");
+
+      const storeOrigin =
+        "https://tiny-frog-transfer--store.platane.workers.dev";
+
+      form.onsubmit = (event) => {
+        event.preventDefault();
+
+        // loading state
+        {
+          for (const el of form.querySelectorAll("button,input"))
+            el.disabled = true;
+
+          const spinner = document.createElement("span");
+          spinner.className = "spinner";
+          form.querySelector('[type="submit"]').appendChild(spinner);
+        }
+
+        const apiKey = event.target.elements.namedItem("api-key").value;
+        const file = event.target.elements.namedItem("file").files[0];
+
+        Promise.resolve()
+          .then(async () => {
+            const arrayBuffer = await new Promise((resolve, reject) => {
+              const fr = new FileReader();
+              fr.onerror = () => reject(fr.error);
+              fr.onload = () => resolve(fr.result);
+
+              fr.readAsArrayBuffer(file);
+            });
+
+            const res = await fetch("/put", {
+              headers: { "x-api-key": apiKey },
+              method: "PUT",
+              body: arrayBuffer,
+            });
+
+            if (!res.ok)
+              throw new Error(await res.text().catch(() => res.statusText));
+
+            const { objectUrl } = await res.json();
+
+            const fileExtension = file.name.match(/(.\w+)$/)?.[1];
+            const url = objectUrl + fileExtension;
+
+            // finish state
+            {
+              form.parentElement.removeChild(form);
+
+              const a = document.createElement("a");
+              a.innerText = url;
+              a.href = url;
+
+              paper.appendChild(a);
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+
+            // error state
+            {
+              form.parentElement.removeChild(form);
+
+              const pre = document.createElement("pre");
+              pre.innerText = err.message ?? err;
+
+              paper.appendChild(pre);
+            }
+          });
+      };
+    </script>
+  </body>
+</html>
