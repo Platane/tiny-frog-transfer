@@ -1,5 +1,5 @@
 import type { R2Bucket, PagesFunction } from "@cloudflare/workers-types";
-// import crypto from "crypto";
+import crypto from "crypto";
 
 export const onRequestPut: PagesFunction<{
   bucket: R2Bucket;
@@ -10,14 +10,18 @@ export const onRequestPut: PagesFunction<{
 
   const value = await request.arrayBuffer();
 
-  if (value.byteLength > 1000 * 1000)
+  if (value.byteLength > 10 * 1000 * 1000)
     return new Response("content too large", { status: 413 });
 
-  // const hash = crypto.createHash("md5").update(value).digest("base64");
+  const hash = crypto
+    .createHash("md5")
+    .update(Buffer.from(value))
+    .digest("base64");
 
-  // const key = hash.slice(4).replaceAll("/", "").toLowerCase();
-
-  const key = Math.random().toString(36).slice(2, 6);
+  const key = hash
+    .toLowerCase()
+    .replaceAll(/[\/\+oil10]/g, "")
+    .slice(0, 4);
 
   await env.bucket.put(key, value);
 
