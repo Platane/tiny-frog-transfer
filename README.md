@@ -1,5 +1,9 @@
 # 🐸 Tiny Frog Transfer
 
+Allows to upload and retrieve files
+
+[app](https://tiny-frog.pages.dev)
+
 # deploy
 
 ```sh
