@@ -10,7 +10,9 @@ export const onRequestPut: PagesFunction<{
 
   const value = await request.arrayBuffer();
 
-  if (value.byteLength > 10 * 1000 * 1000)
+  if (
+    value.byteLength > 100_000_000 // 100 mb
+  )
     return new Response("content too large", { status: 413 });
 
   const hash = crypto
